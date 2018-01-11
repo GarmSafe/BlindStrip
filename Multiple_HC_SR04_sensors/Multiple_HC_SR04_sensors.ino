@@ -35,7 +35,11 @@ uint8_t currentSensor = 0;
 /**
 *distance from quadriceps to ground.
 */
-int setup_value;  
+int setup_value;
+/**
+*number of values for the setup
+*/
+int values_number;
 /**
 *Echo Pins of the ultrasonic sensors
 */
@@ -180,27 +184,34 @@ void vibrate(){
 */
 
 void set_setup_value() { 
-  int sum=0,temp,;
-
-  for(int i=0;i<10;i++) // needed at least ten values
-  {
-    temp = sonar[2].ping_cm();  //send a ping
-
-    if(temp != 0) //if the ping is not out of range
+  int sum=0,temp,numbers[values_number];
+  boolean ok=false;
+  while(!ok) {
+    for(int i=0;i<values_number;i++) // needed at least ten values
     {
-      sum += temp; //add the value to the sum
+      temp = sonar[2].ping_cm();  //send a ping
+  
+      if(temp != 0) //if the ping is not out of range
+      {
+        sum += temp; //add the value to the sum
+        numbers[i]=temp;
+      }
+      else
+      {
+        i--;  //ping another value
+      }
+      Serial.println();
+      Serial.println(temp);
+      delay(35);
     }
-    else
-    {
-      i--;  //ping another value
+  
+    setup_value = sum/10; //average of the ten values pinged
+    Serial.println(setup_value);
+    
+    if(calcola_varianza(numbers)) {
+      ok=true;
     }
-    Serial.println();
-    Serial.println(temp);
-    delay(35);
   }
-
-  setup_value = sum/10; //average of the ten values pinged
-  Serial.println(setup_value);
 }
 
 /**
@@ -212,6 +223,22 @@ void set_ping_interval() {
   for (uint8_t i = 1; i < SONAR_NUM; i++)   //Set the starting time for each sensor.  
   {
     pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
+  }
+}
+
+boolean calcola_varianza(int numbers[]) {
+  int somma=0,varianza;
+  for(int i=0;i<values_number;i++) {
+    somma+=(numbers[i]-setup_value)^2;
+  }
+  
+  varianza=somma/values_number;
+  
+  if(varianza>2) {
+    return false;
+  }
+  else {
+    return true;
   }
 }
 
