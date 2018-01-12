@@ -41,6 +41,10 @@ int setup_value;
 */
 int values_number=10;
 /**
+*number of the sensor that recognises irregularities
+*/
+int sensorNumber = 4;
+/**
 *Echo Pins of the ultrasonic sensors
 */
 int echoPins[SONAR_NUM]={
@@ -53,7 +57,7 @@ int vibrations[SONAR_NUM];
 *Trigger pins of the ultrasonic sensors.
 */
 int motPins[SONAR_NUM] = {
-  5,3,9,6,10};  
+  3,5,6,9,10};  
   /**
 *Sensor object array.
 
@@ -69,10 +73,10 @@ NewPing sonar[SONAR_NUM] = {
 //Each sensor's trigger pin, echo pin, and max distance to ping.
 	
   NewPing(2, A0, MAX_DISTANCE), 
-  NewPing(4, A1, MAX_DISTANCE), 
-  NewPing(12, A4, MAX_DISTANCE), 
-  NewPing(8, A3, MAX_DISTANCE), 
-  NewPing(7, A2, MAX_DISTANCE) 
+  NewPing(4, A1, MAX_DISTANCE),
+  NewPing(7, A2, MAX_DISTANCE), 
+  NewPing(8, A3, MAX_DISTANCE),
+  NewPing(12, A4, MAX_DISTANCE)
   };  
 
   /**
@@ -108,7 +112,7 @@ void loop() {
 
       cm[currentSensor] = sonar[currentSensor].ping_cm();      //Send a ping, returns the distance in centimeters or 0 (zero) if no ping echo within set distance limit
 
-      if(currentSensor == 4)  //sensor that recognises holes
+      if(currentSensor == sensorNumber)  //sensor that recognises holes
       {
         if(cm[currentSensor] == 0 || (cm[currentSensor] - 10) > setup_value || (cm[currentSensor] + 10) < setup_value)  //if the no ping echo or the distance is higher than 75
         {
@@ -194,7 +198,7 @@ void set_setup_value() {
     Serial.println("Valori");
     for(int i=0;i<values_number;i++) // needed at least ten values
     {
-      temp = sonar[4].ping_cm();  //send a ping
+      temp = sonar[sensorNumber].ping_cm();  //send a ping
   
       if(temp != 0) //if the ping is not out of range
       {
