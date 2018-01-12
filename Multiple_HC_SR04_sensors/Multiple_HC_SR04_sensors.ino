@@ -35,7 +35,15 @@ uint8_t currentSensor = 0;
 /**
 *distance from quadriceps to ground.
 */
-int setup_value;  
+int setup_value;
+/**
+*number of values for the setup
+*/
+int values_number=10;
+/**
+*number of the sensor that recognises irregularities
+*/
+int sensor_number = 4;
 /**
 *Echo Pins of the ultrasonic sensors
 */
@@ -55,9 +63,9 @@ int motPins[SONAR_NUM] = {
 
 *\param NewPing(2,A0,MAX_DISTANCE)  leg-sx (high)
 *\param NewPing(4,A1,MAX_DISTANCE)  leg-sx (low)
-*\param NewPing(7,A2,MAX_DISTANCE)  leg-dx (high) -> for holes, stairs
+*\param NewPing(12,A4,MAX_DISTANCE) leg-dx (high)
 *\param NewPing(8,A3,MAX_DISTANCE)  leg-dx (low)
-*\param NewPing(12,A4,MAX_DISTANCE) belt
+*\param NewPing(7,A2,MAX_DISTANCE)  belt -> for holes, stairs
 
 */
 NewPing sonar[SONAR_NUM] = { 
@@ -65,10 +73,10 @@ NewPing sonar[SONAR_NUM] = {
 //Each sensor's trigger pin, echo pin, and max distance to ping.
 	
   NewPing(2, A0, MAX_DISTANCE), 
-  NewPing(4, A1, MAX_DISTANCE), 
+  NewPing(4, A1, MAX_DISTANCE),
   NewPing(7, A2, MAX_DISTANCE), 
-  NewPing(8, A3, MAX_DISTANCE), 
-  NewPing(12, A4, MAX_DISTANCE) 
+  NewPing(8, A3, MAX_DISTANCE),
+  NewPing(12, A4, MAX_DISTANCE)
   };  
 
   /**
@@ -85,6 +93,7 @@ void setup() {
 */
 
 void loop() {
+  unsigned long initial_time = millis();
   for (uint8_t i = 0; i < SONAR_NUM; i++) { //Loop through all the sensors.
     if (millis() >= pingTimer[i]) { 
       if(i == 0){
@@ -103,7 +112,7 @@ void loop() {
 
       cm[currentSensor] = sonar[currentSensor].ping_cm();      //Send a ping, returns the distance in centimeters or 0 (zero) if no ping echo within set distance limit
 
-      if(currentSensor == 2)  //sensor that recognises holes
+      if(currentSensor == sensor_number)  //sensor that recognises holes
       {
         if(cm[currentSensor] == 0 || (cm[currentSensor] - 10) > setup_value || (cm[currentSensor] + 10) < setup_value)  //if the no ping echo or the distance is higher than 75
         {
@@ -131,7 +140,10 @@ void loop() {
       }
     }
   }
- 
+  unsigned long final_time = millis();
+  unsigned long difference = final_time - initial_time;
+  Serial.print("Time needed to execute the loop:");
+  Serial.println(difference);
 }
 
 /**
@@ -180,27 +192,39 @@ void vibrate(){
 */
 
 void set_setup_value() { 
-  int sum=0,temp,;
-
-  for(int i=0;i<10;i++) // needed at least ten values
-  {
-    temp = sonar[2].ping_cm();  //send a ping
-
-    if(temp != 0) //if the ping is not out of range
+  int sum=0,temp,numbers[values_number];
+  boolean ok=false;
+  double average=0.0;
+  while(!ok) {
+    Serial.println("Valori");
+    for(int i=0;i<values_number;i++) // needed at least ten values
     {
-      sum += temp; //add the value to the sum
+      temp = sonar[sensor_number].ping_cm();  //send a ping
+  
+      if(temp != 0) //if the ping is not out of range
+      {
+        sum += temp; //add the value to the sum
+        numbers[i]=temp;
+      }
+      else
+      {
+        i--;  //ping another value
+      }
+      Serial.println(temp);
+      delay(35);
     }
-    else
-    {
-      i--;  //ping another value
+  
+    average = (double)sum/(double)values_number; //average of the ten values pinged
+    Serial.print("Average: ");
+    Serial.println(average);
+    setup_value = (int)average;
+    Serial.print("Setup value: ");
+    Serial.println(setup_value);
+    
+    if(calcola_varianza(numbers)) {
+      ok=true;
     }
-    Serial.println();
-    Serial.println(temp);
-    delay(35);
   }
-
-  setup_value = sum/10; //average of the ten values pinged
-  Serial.println(setup_value);
 }
 
 /**
@@ -212,6 +236,25 @@ void set_ping_interval() {
   for (uint8_t i = 1; i < SONAR_NUM; i++)   //Set the starting time for each sensor.  
   {
     pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
+  }
+}
+
+boolean calcola_varianza(int numbers[]) {
+  double somma=0.0;
+  double varianza=0.0;
+  for(int i=0;i<values_number;i++) {
+    somma+=pow(numbers[i]-setup_value,2);
+  }
+  
+  varianza=(double)somma/(double)values_number;
+  Serial.print("Varianza: ");
+  Serial.println(varianza);
+  
+  if(varianza>2) {
+    return false;
+  }
+  else {
+    return true;
   }
 }
 
