@@ -43,7 +43,7 @@ int values_number=10;
 /**
 *number of the sensor that recognises irregularities
 */
-int sensorNumber = 4;
+int sensor_number = 4;
 /**
 *Echo Pins of the ultrasonic sensors
 */
@@ -57,7 +57,7 @@ int vibrations[SONAR_NUM];
 *Trigger pins of the ultrasonic sensors.
 */
 int motPins[SONAR_NUM] = {
-  3,5,6,9,10};  
+  5,3,9,6,10};  
   /**
 *Sensor object array.
 
@@ -112,7 +112,7 @@ void loop() {
 
       cm[currentSensor] = sonar[currentSensor].ping_cm();      //Send a ping, returns the distance in centimeters or 0 (zero) if no ping echo within set distance limit
 
-      if(currentSensor == sensorNumber)  //sensor that recognises holes
+      if(currentSensor == sensor_number)  //sensor that recognises holes
       {
         if(cm[currentSensor] == 0 || (cm[currentSensor] - 10) > setup_value || (cm[currentSensor] + 10) < setup_value)  //if the no ping echo or the distance is higher than 75
         {
@@ -194,11 +194,12 @@ void vibrate(){
 void set_setup_value() { 
   int sum=0,temp,numbers[values_number];
   boolean ok=false;
+  double average=0.0;
   while(!ok) {
     Serial.println("Valori");
     for(int i=0;i<values_number;i++) // needed at least ten values
     {
-      temp = sonar[sensorNumber].ping_cm();  //send a ping
+      temp = sonar[sensor_number].ping_cm();  //send a ping
   
       if(temp != 0) //if the ping is not out of range
       {
@@ -213,7 +214,11 @@ void set_setup_value() {
       delay(35);
     }
   
-    setup_value = sum/10; //average of the ten values pinged
+    average = (double)sum/(double)values_number; //average of the ten values pinged
+    Serial.print("Average: ");
+    Serial.println(average);
+    setup_value = (int)average;
+    Serial.print("Setup value: ");
     Serial.println(setup_value);
     
     if(calcola_varianza(numbers)) {
@@ -235,13 +240,13 @@ void set_ping_interval() {
 }
 
 boolean calcola_varianza(int numbers[]) {
-  int somma=0;
-  double varianza;
+  double somma=0.0;
+  double varianza=0.0;
   for(int i=0;i<values_number;i++) {
-    somma+=(numbers[i]-setup_value)^2;
+    somma+=pow(numbers[i]-setup_value,2);
   }
   
-  varianza=somma/values_number;
+  varianza=(double)somma/(double)values_number;
   Serial.print("Varianza: ");
   Serial.println(varianza);
   
