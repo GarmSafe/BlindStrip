@@ -1,15 +1,15 @@
 #include <NewPing.h>
 
 /**
-*Number of sensors
+*Number of ultrasonic sensors
 */
 #define SONAR_NUM 5
 /**
-*Maximum distance (in cm) to ping.
+*Maximum distance (in cm)
 */
-#define MAX_DISTANCE 100
+#define MAX_DISTANCE 150
 /**
-*Maximum distance range (in cm)
+*Maximum distance range (for the sensor that recognises irregularities)
 */
 #define MAX_DISTANCE_2 400
 /**
@@ -33,15 +33,15 @@ unsigned int cm[SONAR_NUM];
 */
 uint8_t currentSensor = 0;         
 /**
-*distance from quadriceps to ground.
+*Distance from the belt to the ground (for the sensor that recognises irregularities)
 */
 int setup_value;
 /**
-*number of values for the setup
+*Number of values for the setup
 */
 int values_number=10;
 /**
-*number of the sensor that recognises irregularities
+*Number of the sensor that recognises irregularities
 */
 int sensor_number = 4;
 /**
@@ -49,8 +49,8 @@ int sensor_number = 4;
 */
 int echoPins[SONAR_NUM]={
   A0,A1,A2,A3,A4};       
-  /**
-*vibrations
+/**
+*Vibrations' values
 */
 int vibrations[SONAR_NUM]; 
 /**
@@ -112,30 +112,30 @@ void loop() {
 
       cm[currentSensor] = sonar[currentSensor].ping_cm();      //Send a ping, returns the distance in centimeters or 0 (zero) if no ping echo within set distance limit
 
-      if(currentSensor == sensor_number)  //sensor that recognises holes
+      if(currentSensor == sensor_number)  //Sensor that recognises holes
       {
-        if(cm[currentSensor] == 0 || (cm[currentSensor] - 10) > setup_value || (cm[currentSensor] + 10) < setup_value)  //if the no ping echo or the distance is higher than 75
+        if(cm[currentSensor] == 0 || (cm[currentSensor] - 10) > setup_value || (cm[currentSensor] + 10) < setup_value)  //If the no ping echo or the distance is higher than 75
         {
-          vibrations[currentSensor]=255; //vibrate
+          vibrations[currentSensor]=255; //Vibrate
         }
         else
         {
-          vibrations[currentSensor]=0;  //no vibrate
+          vibrations[currentSensor]=0;  //No vibrate
         }
       }
       else
       {
-        if(cm[currentSensor] == 0){    //if the no ping echo
+        if(cm[currentSensor] == 0){    //If the no ping echo
           reset();
           vibrations[currentSensor]=0;
         }
         else
         {
-          if(cm[currentSensor] == 1){   //adjust minimum range to 2cm
+          if(cm[currentSensor] == 1){   //Adjust minimum range to 2cm
             cm[currentSensor] = 2;
           }
 
-          vibrations[currentSensor] = map(cm[currentSensor], 2, MAX_DISTANCE, 255, 80); //calculate vibration according to the distance 
+          vibrations[currentSensor] = map(cm[currentSensor], 2, MAX_DISTANCE, 255, 80); //Calculate vibration according to the distance 
         }
       }
     }
@@ -157,7 +157,7 @@ void reset(){
 }
 
 /**
-* the printResults() prints the results on the Serial monitor (used by developers)
+*The printResults() prints the results on the Serial monitor (used by developers)
 */
 void printResults() { 
   Serial.print("- ");
@@ -179,7 +179,7 @@ void printResults() {
 }
 
 /**
-*the vibrate() function makes vibrate all the vibration motors with respective vibrations
+*The vibrate() function makes vibrate all the vibration motors with respective vibrations
 */
 void vibrate(){ 
   for(uint8_t i=0; i < SONAR_NUM; i++){
@@ -188,7 +188,7 @@ void vibrate(){
 }
 
 /**
-*the set_setup_value() function sets the setup_value on the basis of the height of the person
+*The set_setup_value() function sets the setup_value on the basis of the height of the person
 */
 
 void set_setup_value() { 
@@ -196,39 +196,39 @@ void set_setup_value() {
   boolean ok=false;
   double average=0.0;
   while(!ok) {
-    Serial.println("Valori");
-    for(int i=0;i<values_number;i++) // needed at least ten values
+    Serial.println("Values");
+    for(int i=0;i<values_number;i++) // Needed at least ten values
     {
-      temp = sonar[sensor_number].ping_cm();  //send a ping
+      temp = sonar[sensor_number].ping_cm();  //Send a ping
   
-      if(temp != 0) //if the ping is not out of range
+      if(temp != 0) //If the ping is not out of range
       {
-        sum += temp; //add the value to the sum
+        sum += temp; //Add the value to the sum
         numbers[i]=temp;
       }
       else
       {
-        i--;  //ping another value
+        i--;  //Ping another value
       }
       Serial.println(temp);
       delay(35);
     }
   
-    average = (double)sum/(double)values_number; //average of the ten values pinged
+    average = (double)sum/(double)values_number; //Average of the ten values pinged
     Serial.print("Average: ");
     Serial.println(average);
     setup_value = (int)average;
     Serial.print("Setup value: ");
     Serial.println(setup_value);
     
-    if(calcola_varianza(numbers)) {
+    if(calculate_variance(numbers)) {
       ok=true;
     }
   }
 }
 
 /**
-*the set_ping_interval() function sets the setup_value on the basis of the height of the person
+*The set_ping_interval() function sets the setup_value on the basis of the height of the person
 */
 void set_ping_interval() {
   pingTimer[0] = millis() + PING_SPEED; //First ping starts at "PING_SPEED" ms, gives time for the Arduino to chill before starting.
@@ -239,18 +239,21 @@ void set_ping_interval() {
   }
 }
 
-boolean calcola_varianza(int numbers[]) {
-  double somma=0.0;
-  double varianza=0.0;
+/**
+*The calculate_variance() function calculates the variance to set the setup_value
+**/
+boolean calculate_variance(int numbers[]) {
+  double sum=0.0;
+  double variance=0.0;
   for(int i=0;i<values_number;i++) {
-    somma+=pow(numbers[i]-setup_value,2);
+    sum+=pow(numbers[i]-setup_value,2);
   }
   
-  varianza=(double)somma/(double)values_number;
-  Serial.print("Varianza: ");
-  Serial.println(varianza);
+  variance=(double)sum/(double)values_number;
+  Serial.print("variance: ");
+  Serial.println(variance);
   
-  if(varianza>2) {
+  if(variance>2) {
     return false;
   }
   else {
