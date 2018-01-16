@@ -196,6 +196,7 @@ void set_setup_value() {
   boolean ok=false;
   double average=0.0;
   while(!ok) {
+    sum=0;
     Serial.println("Values");
     for(int i=0;i<values_number;i++) // Needed at least ten values
     {
