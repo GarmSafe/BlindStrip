@@ -19,7 +19,7 @@
 /**
 *Ping frequency (in milliseconds), fastest we should ping is about 35ms per sensor
 */
-#define PING_SPEED 250
+#define PING_SPEED 100
 /**
 *Holds the times when the next ping should happen for each sensor.
 */
@@ -61,11 +61,13 @@ int motPins[SONAR_NUM] = {
   /**
 *Sensor object array.
 
-*\param NewPing(2,A0,MAX_DISTANCE)  leg-sx (high)
-*\param NewPing(4,A1,MAX_DISTANCE)  leg-sx (low)
-*\param NewPing(12,A4,MAX_DISTANCE) leg-dx (high)
-*\param NewPing(8,A3,MAX_DISTANCE)  leg-dx (low)
-*\param NewPing(7,A2,MAX_DISTANCE)  belt -> for holes, stairs
+*\param NewPing(2,A0,MAX_DISTANCE)  leg-dx (high)
+*\param NewPing(4,A1,MAX_DISTANCE)  leg-dx (low)
+*\param NewPing(7,A2,MAX_DISTANCE)  leg-sx (high)
+*\param NewPing(8,A3,MAX_DISTANCE)  leg-sx (low)
+*\param NewPing(12,A4,MAX_DISTANCE) belt -> for holes, stairs                                                                                                                                                                  
+
+
 
 */
 NewPing sonar[SONAR_NUM] = { 
@@ -76,7 +78,7 @@ NewPing sonar[SONAR_NUM] = {
   NewPing(4, A1, MAX_DISTANCE),
   NewPing(7, A2, MAX_DISTANCE), 
   NewPing(8, A3, MAX_DISTANCE),
-  NewPing(12, A4, MAX_DISTANCE)
+  NewPing(12, A4, MAX_DISTANCE_2)
   };  
 
   /**
@@ -84,7 +86,7 @@ NewPing sonar[SONAR_NUM] = {
 */
 void setup() {
   Serial.begin(9600);
-
+  
   set_ping_interval();
   set_setup_value();
 }
@@ -93,7 +95,6 @@ void setup() {
 */
 
 void loop() {
-  unsigned long initial_time = millis();
   for (uint8_t i = 0; i < SONAR_NUM; i++) { //Loop through all the sensors.
     if (millis() >= pingTimer[i]) { 
       if(i == 0){
@@ -140,10 +141,6 @@ void loop() {
       }
     }
   }
-  unsigned long final_time = millis();
-  unsigned long difference = final_time - initial_time;
-  Serial.print("Time needed to execute the loop:");
-  Serial.println(difference);
 }
 
 /**
@@ -212,7 +209,7 @@ void set_setup_value() {
         i--;  //Ping another value
       }
       Serial.println(temp);
-      delay(35);
+      delay(PING_INTERVAL);
     }
   
     average = (double)sum/(double)values_number; //Average of the ten values pinged
