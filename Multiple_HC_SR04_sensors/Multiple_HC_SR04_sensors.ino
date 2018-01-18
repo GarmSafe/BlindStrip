@@ -23,7 +23,7 @@
 /**
  * number of distance measures needed for each ultrasonic sensor
  */
-#define MEASURES_NUM 3
+#define MEASURES_NUM 4
 /**
  * Number of values for the setup
  */
@@ -208,8 +208,8 @@ void printResults() {
       Serial.print("vib - ");
     }
     
-    Serial.println("actual cm: ");
-    Serial.print(actual_cm[i]);
+    Serial.print("actual cm: ");
+    Serial.println(actual_cm[i]);
   }
 
   Serial.println();
